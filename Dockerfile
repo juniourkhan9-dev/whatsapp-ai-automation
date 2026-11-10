@@ -1,36 +1,25 @@
-FROM node:18-bullseye-slim
+# Use official Puppeteer image with Chrome already installed and configured
+FROM ghcr.io/puppeteer/puppeteer:21.5.0
 
-# Install latest chrome dev tools and fonts
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    ca-certificates \
-    procps \
-    libxss1 \
-    libgconf-2-4 \
-    libxtst6 \
-    chromium \
-    fonts-ipafont-gothic \
-    fonts-wqy-zenhei \
-    fonts-thai-tlwg \
-    fonts-kacst \
-    fonts-freefont-ttf \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set Chrome executable path environment variable
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PORT=3000
-
+# Set working directory inside container
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+# Set environment variables for puppeteer and port
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+ENV PORT=3000
 
+# Copy package files with correct permissions
+COPY --chown=pptruser:pptruser package*.json ./
+
+# Install dependencies as pptruser
 RUN npm install --omit=dev
 
-COPY . .
+# Copy project files
+COPY --chown=pptruser:pptruser . .
 
+# Expose server port
 EXPOSE 3000
 
+# Start server
 CMD ["node", "server.js"]
