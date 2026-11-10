@@ -4,6 +4,7 @@
   "description": "WhatsApp AI Automation with PDF Generator and Web Management",
   "main": "server.js",
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node server.js"
   },
   "keywords": [],
