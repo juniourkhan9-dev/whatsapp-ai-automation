@@ -15,7 +15,6 @@ const puppeteerArgs = [
     '--disable-accelerated-2d-canvas',
     '--no-first-run',
     '--no-zygote',
-    '--single-process',
     '--disable-gpu'
 ];
 
@@ -30,11 +29,20 @@ if (process.env.PUPPETEER_EXECUTABLE_PATH) {
 
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, '.wwebjs_auth') }),
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1018944111-alpha.html'
+    },
     puppeteer: puppeteerConfig
 });
 
 client.on('qr', async (qr) => {
     qrCodeDataURL = await qrcode.toDataURL(qr);
+    console.log('⚡ New QR code generated');
+});
+
+client.on('loading_screen', (percent, message) => {
+    console.log('⏳ WhatsApp Loading:', percent, '%', message);
 });
 
 client.on('ready', () => {
@@ -45,7 +53,11 @@ client.on('ready', () => {
 });
 
 client.on('authenticated', () => {
-    console.log('WhatsApp Authenticated Successfully!');
+    console.log('✅ WhatsApp Authenticated Successfully!');
+});
+
+client.on('auth_failure', (msg) => {
+    console.error('❌ WhatsApp Auth Failure:', msg);
 });
 
 // Storage Directory
