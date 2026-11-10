@@ -2,146 +2,112 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
 const { generateAppointmentPDF } = require('./pdfGenerator');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/storage', express.static(path.join(__dirname, 'storage')));
 
-// Storage directory for generated PDFs
-const storageDir = path.join(__dirname, 'storage');
-if (!fs.existsSync(storageDir)) {
-    fs.mkdirSync(storageDir, { recursive: true });
-}
+const ACCESS_TOKEN = 'EAA6BGB8gky0BS1fsIVPvMZA3wlatwLrhGwgnCPZAMI0b5ZAZBnfC7giOslQpV6RZCLZB8n5WadX2LuAKo1ke80p8GWKpqpNZAuAo5Br7hBpAFuYstDZA8WJ8eQ342e4o5BTw6W1vkZBJgRJMNj9qgqW5h1v4Mo3PX3uOMI38aQMFWWZALY5ZCfLyQ2rC0NG9ow0GFUyj9BM2aNgPizI7njsQgG9XoZCcL77gUJAlRGOLBG0ZBtYvxgy6g4SGzTpP4njc45C85RfjIWQl05JF3KNcZBFG7s1opzbFwcDlGHA9rp1wZDZD';
+const PHONE_NUMBER_ID = '1501745066346540';
+const VERIFY_TOKEN = 'my_secret_token_123';
 
-// In-memory Appointments Database & Calendar Slots
-let appointments = [];
-let bookedSlots = [
-    { date: '2026-11-10', time: '11:00 AM' }, // Demo pre-booked slot
-    { date: '2026-11-10', time: '03:00 PM' }
-];
+// 1. Meta Webhook Verification (GET)
+app.get('/webhook', (req, res) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
 
-// Pre-defined Reviews & Links
-const REVIEW_LINKS = [
-    { title: 'Google Business Reviews (4.9 ★ Rating - 180+ Reviews)', url: 'https://maps.google.com/?cid=12345678' },
-    { title: 'Client Video Testimonials & Case Studies', url: 'https://youtube.com/watch?v=sample-client-review' },
-    { title: 'Verified Trustpilot Ratings & Badges', url: 'https://trustpilot.com/review/example-business' }
-];
-
-// Knowledge base for FAQs
-function getAiChatResponse(message) {
-    const text = message.toLowerCase().trim();
-
-    if (text.includes('review') || text.includes('feedback') || text.includes('proof') || text.includes('client work') || text.includes('rating')) {
-        let reply = "Bilkul! Yahan hamare previous clients ke reviews aur work samples hain:\n\n";
-        REVIEW_LINKS.forEach((rev, idx) => {
-            reply += `${idx + 1}. [${rev.title}](${rev.url})\n`;
-        });
-        reply += "\nAap inko check kar sakte hain. Kya aap humare expert ke saath ek appointment/call schedule karna chahte hain?";
-        return { reply, triggerCall: false, reviews: REVIEW_LINKS };
+    if (mode && token) {
+        if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+            console.log('✅ META WEBHOOK VERIFIED SUCCESSFULLY!');
+            res.status(200).send(challenge);
+        } else {
+            res.sendStatus(403);
+        }
+    } else {
+        res.sendStatus(400);
     }
+});
 
-    if (text.includes('service') || text.includes('kya karte ho') || text.includes('features') || text.includes('kaam')) {
-        return {
-            reply: "Hum business ke liye complete WhatsApp Automation, AI Voice Calling Agents, aur Automated CRM setup karte hain. Isse aapke 90% client queries auto-resolve ho jate hain aur bookings automate ho jati hain!\n\nKya aapko iska live call demo dekhna hai ya booking karni hai?",
-            triggerCall: false
-        };
-    }
-
-    if (text.includes('price') || text.includes('cost') || text.includes('charges') || text.includes('kitna') || text.includes('kharcha')) {
-        return {
-            reply: "Pricing aapke requirement aur call volume par depend karti hai:\n• One-time Setup: ₹25,000 - ₹50,000\n• Running Maintenance: ₹3,000 - ₹5,000/month\n\nEk quick confirmation call schedule karein taaki hum aapke business ke hisaab se exact quotation de sakein?",
-            triggerCall: false
-        };
-    }
-
-    if (text.includes('book') || text.includes('yes') || text.includes('haan') || text.includes('appointment') || text.includes('confirm') || text.includes('call') || text.includes('schedule') || text.includes('demo')) {
-        return {
-            reply: "Bahut badhiya! 🎉 Main aapki booking initiate kar raha hoon. Hamara Automated Voice Assistant aapko abhi live call karke Date, Time aur Address confirm karega...",
-            triggerCall: true
-        };
-    }
-
-    return {
-        reply: "Namaste! Main Business Assistant hoon. Main aapki kya madad kar sakta hoon? Aap mujhse services, pricing, client reviews maang sakte hain ya direct appointment call book kar sakte hain.",
-        triggerCall: false
+// Helper: Send Meta Interactive Buttons
+async function sendMetaButtons(toPhone) {
+    const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
+    const payload = {
+        messaging_product: 'whatsapp',
+        to: toPhone,
+        type: 'interactive',
+        interactive: {
+            type: 'button',
+            header: { type: 'text', text: 'Business AI Assistant' },
+            body: { text: 'Namaste! 🙏 Hamari company me aapka swagat hai.\n\nKripya neeche diye gaye option par tap karein:' },
+            footer: { text: '1-Click Instant Reply' },
+            action: {
+                buttons: [
+                    { type: 'reply', reply: { id: 'btn_services', title: '💡 Services & Rates' } },
+                    { type: 'reply', reply: { id: 'btn_reviews', title: '⭐ Client Reviews' } },
+                    { type: 'reply', reply: { id: 'btn_book', title: '📞 Book Appointment' } }
+                ]
+            }
+        }
     };
+    await axios.post(url, payload, {
+        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
 }
 
-// 1. WhatsApp Chat API
-app.post('/api/chat', (req, res) => {
-    const { message } = req.body;
-    const response = getAiChatResponse(message || '');
-    res.json(response);
-});
+// Helper: Send Text Message via Meta
+async function sendMetaText(toPhone, text) {
+    const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
+    await axios.post(url, {
+        messaging_product: 'whatsapp',
+        to: toPhone,
+        type: 'text',
+        text: { body: text }
+    }, {
+        headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
+}
 
-// 2. Check Calendar Availability
-app.post('/api/check-slot', (req, res) => {
-    const { date, time } = req.body;
-    const isBusy = bookedSlots.some(slot => slot.date === date && slot.time.toLowerCase() === time.toLowerCase());
-    if (isBusy) {
-        return res.json({ available: false, message: `Maaf kijiye, ${time} par slot pehle se booked hai. Kripya doosra time chunein jaise 12:00 PM ya 04:00 PM.` });
+// 2. Meta Webhook Receiver (POST)
+app.post('/webhook', async (req, res) => {
+    res.sendStatus(200);
+
+    const body = req.body;
+    if (body.object && body.entry) {
+        for (const entry of body.entry) {
+            for (const change of entry.changes) {
+                const value = change.value;
+                if (value.messages && value.messages.length > 0) {
+                    const message = value.messages[0];
+                    const from = message.from;
+
+                    // Button Click Detected
+                    if (message.type === 'interactive' && message.interactive.button_reply) {
+                        const buttonId = message.interactive.button_reply.id;
+
+                        if (buttonId === 'btn_services') {
+                            await sendMetaText(from, "💡 Hamari Services:\n• WhatsApp Business AI Automation\n• Auto Voice Call Agent\n• Google Calendar & Instant PDF Slip\n\nBooking ke liye 'Book' button tap karein!");
+                        } else if (buttonId === 'btn_reviews') {
+                            await sendMetaText(from, "⭐ Hamare Verified Client Reviews:\n1. Google Business (4.9 ★): https://maps.google.com/?cid=123456\n2. Video Proof: https://youtube.com/watch?v=sample\n\nAap inko check kar sakte hain!");
+                        } else if (buttonId === 'btn_book') {
+                            await sendMetaText(from, "Bahut badhiya! 🎉 Hamara Automated Call Assistant aapko 10 second me call karke appointment confirm karega aur PDF receipt bhej dega!");
+                        }
+                    } else if (message.type === 'text') {
+                        // User typed text -> Send 3 Buttons!
+                        await sendMetaButtons(from);
+                    }
+                }
+            }
+        }
     }
-    res.json({ available: true, message: `Great! ${date} ko ${time} ka slot bilkul free hai.` });
-});
-
-// 3. Confirm Booking & Generate PDF
-app.post('/api/book-appointment', async (req, res) => {
-    try {
-        const { name, phone, date, time, address, requirement } = req.body;
-
-        // Add to booked slots
-        bookedSlots.push({ date, time });
-
-        const timestamp = Date.now();
-        const fileName = `Appointment_${name.replace(/\s+/g, '_')}_${timestamp}.pdf`;
-        const filePath = path.join(storageDir, fileName);
-
-        const bookingId = await generateAppointmentPDF({
-            name,
-            phone: phone || '+91 98765 43210',
-            date,
-            time,
-            address: address || 'Office / Online Google Meet',
-            requirement: requirement || 'WhatsApp & AI Voice Automation Demo Inquiry'
-        }, filePath);
-
-        const appointmentRecord = {
-            bookingId,
-            name,
-            phone: phone || '+91 98765 43210',
-            date,
-            time,
-            address,
-            requirement,
-            pdfUrl: `/storage/${fileName}`,
-            createdAt: new Date().toISOString()
-        };
-
-        appointments.push(appointmentRecord);
-
-        res.json({
-            success: true,
-            bookingId,
-            message: `Appointment confirmed for ${name}!`,
-            pdfUrl: `/storage/${fileName}`,
-            appointment: appointmentRecord
-        });
-    } catch (err) {
-        console.error('Error generating PDF:', err);
-        res.status(500).json({ success: false, error: 'Could not generate appointment PDF' });
-    }
-});
-
-// 4. Get all appointments (Admin CRM View)
-app.get('/api/appointments', (req, res) => {
-    res.json(appointments);
 });
 
 server.listen(PORT, () => {
-    console.log(`WhatsApp AI Automation Simulator running at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
