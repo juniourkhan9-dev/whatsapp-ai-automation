@@ -1,19 +1,17 @@
 {
   "name": "whatsapp-ai-automation",
   "version": "1.0.0",
-  "description": "WhatsApp AI Automation with PDF Generator and Web Management",
+  "description": "Enterprise WhatsApp AI Cloud Automation with Meta Official Graph API and Instant PDF Slips",
   "main": "server.js",
   "scripts": {
-    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.9",
     "express": "^4.21.2",
-    "pdfkit": "^0.15.1",
-    "qrcode": "^1.5.4",
-    "whatsapp-web.js": "^1.26.0"
+    "pdfkit": "^0.15.1"
   }
 }

@@ -3,149 +3,622 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Business AI Connector</title>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>WhatsApp AI & Voice Automation Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #0c1317; color: #e9edef; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        body { background: #d1d7db; display: flex; height: 100vh; justify-content: center; align-items: center; padding: 20px; }
         
-        .box {
-            background: #111b21;
+        .main-container {
+            display: flex;
+            width: 1200px;
+            height: 92vh;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             border-radius: 12px;
-            padding: 30px;
-            max-width: 550px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #222d34;
+            overflow: hidden;
         }
 
-        .header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; }
-        .logo { width: 44px; height: 44px; background: #00a884; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
-        h2 { font-size: 20px; color: #e9edef; }
-
-        .qr-wrapper {
-            background: white;
-            padding: 16px;
-            border-radius: 8px;
-            display: inline-block;
-            margin: 20px 0;
-            min-width: 260px;
-            min-height: 260px;
+        /* Left WhatsApp UI */
+        .chat-section {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            background: #efeae2;
+            border-right: 1px solid #e0e0e0;
             position: relative;
         }
 
-        .qr-img { width: 240px; height: 240px; display: block; }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 15px;
+        .chat-header {
+            background: #075e54;
+            color: #fff;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        .status-waiting { background: #ffbe0b; color: #111; }
-        .status-connected { background: #00a884; color: white; }
 
-        .instructions {
-            text-align: left;
-            background: #202c33;
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: #25d366;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-info h4 { font-size: 16px; font-weight: 600; }
+        .header-info p { font-size: 12px; opacity: 0.85; }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-image: radial-gradient(#d3cdc4 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 14.5px;
+            line-height: 1.45;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: #ffffff;
+            border-top-left-radius: 0;
+            color: #111;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: #d9fdd3;
+            border-top-right-radius: 0;
+            color: #111;
+        }
+
+        .message .msg-time {
+            font-size: 10px;
+            color: #888;
+            float: right;
+            margin-top: 5px;
+            margin-left: 10px;
+        }
+
+        .quick-replies {
+            padding: 8px 15px;
+            background: #f0f2f5;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-btn {
+            background: #ffffff;
+            border: 1px solid #c5d3ce;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: #075e54;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #075e54;
+            color: #fff;
+        }
+
+        .chat-input-bar {
+            padding: 10px 15px;
+            background: #f0f2f5;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 11px 15px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 14.5px;
+        }
+
+        .send-btn {
+            background: #00a884;
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Right Panel: CRM & Call Simulator */
+        .right-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .right-header {
+            padding: 16px 20px;
+            background: #1e293b;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crm-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 15px 18px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h5 {
+            color: #0f172a;
+            font-size: 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .tag-green { background: #dcfce7; color: #166534; }
+        .tag-blue { background: #dbeafe; color: #1e40af; }
+
+        /* Incoming Call Modal Overlay */
+        .call-modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.92);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 100;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .call-avatar {
+            width: 90px;
+            height: 90px;
+            background: #00a884;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 25px rgba(0, 168, 132, 0.6);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        .call-status { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
+        
+        .call-dialogue-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
             padding: 15px 20px;
             border-radius: 8px;
-            font-size: 13.5px;
-            line-height: 1.6;
-            color: #8696a0;
-            margin-top: 15px;
+            width: 80%;
+            max-width: 450px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #f1f5f9;
         }
 
-        .instructions ol { margin-left: 20px; }
-        .instructions li { margin-bottom: 6px; color: #d1d7db; }
-
-        .spinner {
-            border: 4px solid rgba(0,0,0,0.1);
-            border-top: 4px solid #00a884;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 100px auto;
+        .call-actions {
+            display: flex;
+            gap: 15px;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .call-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .accept-btn { background: #22c55e; color: white; }
+        .reject-btn { background: #ef4444; color: white; }
+
+        .call-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 80%;
+            max-width: 450px;
+            text-align: left;
+        }
+
+        .call-form-group input {
+            padding: 9px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+        .call-form-group input::placeholder { color: #94a3b8; }
+
+        .pdf-preview-box {
+            background: #fff;
+            border: 2px dashed #00a884;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pdf-preview-box a {
+            background: #075e54;
+            color: white;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <div class="header">
-        <div class="logo">💬</div>
-        <div>
-            <h2>WhatsApp Business AI Connect</h2>
-            <p style="font-size: 12px; color: #8696a0;">Scan to connect your WhatsApp directly</p>
+<div class="main-container">
+
+    <!-- LEFT: WhatsApp Chat Simulation -->
+    <div class="chat-section">
+        <div class="chat-header">
+            <div class="avatar">AI</div>
+            <div class="header-info">
+                <h4>Business Support & Sales AI</h4>
+                <p>● Online | Powered by WhatsApp Bot</p>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message received">
+                Namaste! 🙏 Hamare business me aapka swagat hai. Main aapki kya sahayata kar sakta hoon?
+                <br><br>
+                Aap pooch sakte hain:
+                <br>• Services & Pricing
+                <br>• Previous Client Reviews & Proof
+                <br>• Direct Appointment Booking
+                <span class="msg-time">Just now</span>
+            </div>
+        </div>
+
+        <!-- Quick Questions for Testing -->
+        <div class="quick-replies">
+            <button class="quick-btn" onclick="sendQuickMessage('Aap kya services provide karte ho?')">💡 Services Kya Hain?</button>
+            <button class="quick-btn" onclick="sendQuickMessage('Mujhe previous clients ke review dekhne hain')">⭐ Client Reviews Dikhayein</button>
+            <button class="quick-btn" onclick="sendQuickMessage('Mujhe demo call book karna hai')">📞 Appointment Book Karein</button>
+        </div>
+
+        <div class="chat-input-bar">
+            <input type="text" id="userInput" class="chat-input" placeholder="Type a message (e.g. Reviews, Price, Book appointment)..." onkeypress="handleKey(event)">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+
+        <!-- INCOMING AI VOICE CALL OVERLAY -->
+        <div class="call-modal" id="callModal">
+            <div class="call-avatar">📞</div>
+            <h3 style="margin-bottom: 5px;">AI Voice Booking Agent</h3>
+            <div class="call-status" id="callStatusText">Incoming Call for Appointment Confirmation...</div>
+
+            <!-- Dialogue box representing AI speaking -->
+            <div class="call-dialogue-box" id="aiSpeechText">
+                "Namaste! WhatsApp booking request ke sambandh me maine call kiya hai. Kya main aapka Name, Appointment Date, Time aur Address confirm kar sakta hoon?"
+            </div>
+
+            <!-- Call Interaction Form (Simulating Voice Input) -->
+            <div class="call-form-group" id="callForm">
+                <label style="font-size: 12px; color: #cbd5e1;">Aapki Details (Voice Extract Simulated):</label>
+                <input type="text" id="voiceName" placeholder="Client Name (e.g. Rahul Sharma)" value="Rahul Sharma">
+                <input type="text" id="voiceDate" placeholder="Date (e.g. 2026-11-12)" value="2026-11-12">
+                <input type="text" id="voiceTime" placeholder="Time (e.g. 02:00 PM)" value="02:00 PM">
+                <input type="text" id="voiceAddress" placeholder="Address (e.g. Malviya Nagar, Jaipur)" value="Malviya Nagar, Jaipur">
+                <input type="text" id="voiceNeed" placeholder="Client Need / Requirement" value="WhatsApp Automation Setup for Real Estate Firm">
+            </div>
+
+            <div class="call-actions" style="margin-top: 15px;">
+                <button class="call-btn accept-btn" id="confirmCallBtn" onclick="confirmVoiceBooking()">✔ Confirm & Speak (Book Slot)</button>
+                <button class="call-btn reject-btn" onclick="closeCallModal()">✖ Cut Call</button>
+            </div>
         </div>
     </div>
 
-    <div id="statusContainer">
-        <span class="status-badge status-waiting" id="statusBadge">⏳ Loading QR Code...</span>
+    <!-- RIGHT: Business Owner CRM & PDF Inspector -->
+    <div class="right-section">
+        <div class="right-header">
+            <h3>🏢 Business Owner CRM Dashboard</h3>
+            <span class="tag tag-green">LIVE DATA</span>
+        </div>
+
+        <div class="crm-body">
+            <!-- Google Calendar Slot Status -->
+            <div class="card">
+                <h5>📅 Google Calendar Sync Status <span class="tag tag-blue">Auto-Check</span></h5>
+                <p style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                    Pre-booked Slots: <b>2026-11-10 (11:00 AM)</b>, <b>2026-11-10 (03:00 PM)</b>.
+                    <br>AI automatic slot conflict detect karega.
+                </p>
+            </div>
+
+            <!-- Pre-configured Review Links -->
+            <div class="card">
+                <h5>⭐ Configured Client Review Links</h5>
+                <ul style="font-size: 12.5px; color: #334155; margin-left: 18px; margin-top: 5px; line-height: 1.6;">
+                    <li><a href="#" style="color: #0284c7;">Google Business Profile (4.9 ★)</a></li>
+                    <li><a href="#" style="color: #0284c7;">Customer Video Testimonials Link</a></li>
+                    <li><a href="#" style="color: #0284c7;">Trustpilot Verified Page</a></li>
+                </ul>
+            </div>
+
+            <!-- Recent Generated Appointment Slips (PDFs) -->
+            <div class="card" style="flex: 1;">
+                <h5>📑 Generated Appointment Slips (PDFs)</h5>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;">
+                    Jaise hi voice call me confirm hoga, yahan auto-generated PDF receipt record ho jayegi:
+                </p>
+                <div id="appointmentsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="font-size: 12.5px; color: #94a3b8; font-style: italic;">Abhi tak koi booking nahi hui hai. Left side se booking test karein!</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="qr-wrapper" id="qrWrapper">
-        <div class="spinner" id="loadingSpinner"></div>
-        <img id="qrImage" class="qr-img" style="display: none;" alt="WhatsApp Web QR Code">
-    </div>
-
-    <div id="connectedInfo" style="display: none; padding: 20px; background: #005c4b; border-radius: 8px; margin: 15px 0;">
-        <h3 style="color: white; margin-bottom: 6px;">🎉 WhatsApp Connected Successfully!</h3>
-        <p style="font-size: 14px; color: #e9edef;" id="userPhone">AI Bot is now actively replying to your incoming chats.</p>
-    </div>
-
-    <div class="instructions">
-        <b>📱 Apne Mobile se kaise connect karein:</b>
-        <ol>
-            <li>Apne phone me <b>WhatsApp Business</b> open karein.</li>
-            <li>Upar 3 dots (Menu) ya Settings me jayein aur <b>Linked Devices</b> par tap karein.</li>
-            <li><b>"Link a Device"</b> par tap karein aur upar dikh rahe QR code ko scan karein.</li>
-        </ol>
-    </div>
 </div>
 
 <script>
-    async function checkStatus() {
-        try {
-            const res = await fetch('/api/whatsapp/status');
-            const data = await res.json();
-
-            const badge = document.getElementById('statusBadge');
-            const spinner = document.getElementById('loadingSpinner');
-            const qrImg = document.getElementById('qrImage');
-            const connectedInfo = document.getElementById('connectedInfo');
-            const qrWrapper = document.getElementById('qrWrapper');
-
-            if (data.ready) {
-                badge.className = 'status-badge status-connected';
-                badge.innerText = '✅ CONNECTED & ACTIVE';
-                qrWrapper.style.display = 'none';
-                connectedInfo.style.display = 'block';
-                if (data.user) {
-                    document.getElementById('userPhone').innerText = `Phone: +${data.user.wid.user} | AI Bot is LIVE!`;
-                }
-            } else if (data.qr) {
-                badge.className = 'status-badge status-waiting';
-                badge.innerText = '📷 QR Code Ready! Please Scan with WhatsApp';
-                spinner.style.display = 'none';
-                qrImg.src = data.qr;
-                qrImg.style.display = 'block';
-            } else {
-                badge.className = 'status-badge status-waiting';
-                badge.innerText = '⏳ Initializing WhatsApp Engine... (Please wait)';
-            }
-        } catch (e) {
-            console.error(e);
+    // Text to Speech for AI Voice simulation
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'hi-IN'; // Hindi / Hinglish voice
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
         }
     }
 
-    setInterval(checkStatus, 2000);
-    checkStatus();
+    function appendMessage(sender, text, isHtml = false) {
+        const chat = document.getElementById('chatMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender === 'user' ? 'sent' : 'received'}`;
+        
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        if (isHtml) {
+            msgDiv.innerHTML = text + `<span class="msg-time">${time}</span>`;
+        } else {
+            msgDiv.innerText = text;
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'msg-time';
+            timeSpan.innerText = time;
+            msgDiv.appendChild(timeSpan);
+        }
+
+        chat.appendChild(msgDiv);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function handleKey(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendQuickMessage(txt) {
+        document.getElementById('userInput').value = txt;
+        sendMessage();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage('user', text);
+        input.value = '';
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+
+            // Format markdown links into HTML if any
+            let replyText = data.reply.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: #0284c7; font-weight: 500;">$1</a>');
+            replyText = replyText.replace(/\n/g, '<br>');
+
+            setTimeout(() => {
+                appendMessage('bot', replyText, true);
+
+                if (data.triggerCall) {
+                    setTimeout(() => {
+                        triggerIncomingCall();
+                    }, 1800);
+                }
+            }, 600);
+
+        } catch (err) {
+            appendMessage('bot', 'Error connecting to AI server.');
+        }
+    }
+
+    function triggerIncomingCall() {
+        const modal = document.getElementById('callModal');
+        modal.style.display = 'flex';
+        
+        const dialogue = "Namaste! Main aapka AI Appointment Assistant bol raha hoon. Kya main aapka Name, Date, Time aur Address confirm kar sakta hoon?";
+        document.getElementById('aiSpeechText').innerText = `"${dialogue}"`;
+        speakText(dialogue);
+    }
+
+    function closeCallModal() {
+        document.getElementById('callModal').style.display = 'none';
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        appendMessage('bot', 'Call disconnected. Aap chat me dobara booking request bhej sakte hain.');
+    }
+
+    async function confirmVoiceBooking() {
+        const name = document.getElementById('voiceName').value;
+        const date = document.getElementById('voiceDate').value;
+        const time = document.getElementById('voiceTime').value;
+        const address = document.getElementById('voiceAddress').value;
+        const requirement = document.getElementById('voiceNeed').value;
+
+        document.getElementById('callStatusText').innerText = "Checking Google Calendar Slot Availability...";
+
+        // 1. Check Calendar Slot Availability
+        const checkRes = await fetch('/api/check-slot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date, time })
+        });
+        const slotData = await checkRes.json();
+
+        if (!slotData.available) {
+            document.getElementById('aiSpeechText').innerText = `"${slotData.message}"`;
+            speakText(slotData.message);
+            alert(slotData.message);
+            document.getElementById('callStatusText').innerText = "Slot Busy. Choose another time.";
+            return;
+        }
+
+        document.getElementById('callStatusText').innerText = "Slot Free! Generating PDF Receipt...";
+
+        // 2. Book Appointment and Create PDF
+        const bookRes = await fetch('/api/book-appointment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                phone: '+91 98765 43210',
+                date,
+                time,
+                address,
+                requirement
+            })
+        });
+
+        const bookData = await bookRes.json();
+
+        if (bookData.success) {
+            const successVoiceMsg = `Dhanyawaad ${name} ji! Aapka appointment ${date} ko ${time} baje successfully confirm ho gaya hai. Maine WhatsApp par aapko PDF slip bhej di hai.`;
+            document.getElementById('aiSpeechText').innerText = `"${successVoiceMsg}"`;
+            speakText(successVoiceMsg);
+
+            setTimeout(() => {
+                document.getElementById('callModal').style.display = 'none';
+
+                // Send WhatsApp PDF Message
+                const pdfHtml = `
+                    ✅ <b>Appointment Confirmed!</b><br>
+                    Name: <b>${name}</b><br>
+                    Date & Time: <b>${date} at ${time}</b><br>
+                    Address: <b>${address}</b><br><br>
+                    📄 <b>Aapki Confirmation PDF Receipt taiyar hai:</b><br>
+                    <div class="pdf-preview-box">
+                        <span>📑 ${bookData.bookingId}.pdf</span>
+                        <a href="${bookData.pdfUrl}" target="_blank">Download / View PDF</a>
+                    </div>
+                `;
+                appendMessage('bot', pdfHtml, true);
+
+                // Update CRM on the right
+                updateCRMList(bookData.appointment);
+            }, 3000);
+        }
+    }
+
+    function updateCRMList(appointment) {
+        const container = document.getElementById('appointmentsList');
+        // Clear empty placeholder
+        if (container.innerText.includes('Abhi tak koi booking')) {
+            container.innerHTML = '';
+        }
+
+        const card = document.createElement('div');
+        card.style.background = '#f1f5f9';
+        card.style.padding = '10px 14px';
+        card.style.borderRadius = '6px';
+        card.style.border = '1px solid #cbd5e1';
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b>${appointment.name}</b>
+                <span class="tag tag-green">${appointment.bookingId}</span>
+            </div>
+            <div style="font-size:12px; color:#475569; margin-top:4px;">
+                📅 <b>${appointment.date}</b> at <b>${appointment.time}</b><br>
+                📍 ${appointment.address}<br>
+                💡 ${appointment.requirement}
+            </div>
+            <div style="margin-top:8px;">
+                <a href="${appointment.pdfUrl}" target="_blank" style="font-size:11.5px; color:#0284c7; font-weight:600; text-decoration:none;">📄 View Saved PDF</a>
+            </div>
+        `;
+        container.prepend(card);
+    }
 </script>
 
 </body>
